@@ -1,0 +1,12 @@
+/.vscode
+.idea/
+/backend/__pycache__/
+/backend/*.pyc
+/backend/.env
+/frontend/node_modules/
+/frontend/build/
+/frontend/.env
+.DS_Store
+.env
+*.log
+coverage/
