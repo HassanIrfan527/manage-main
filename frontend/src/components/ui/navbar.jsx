@@ -1,71 +1,83 @@
 import React, { useState } from 'react';
 import { Button } from "./button"
-import { Key } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Key, Menu, X, Rocket } from 'lucide-react';
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-    const pageLinks = ['Product', 'Features'];
+  const pageLinks = [
+    { name: 'Features', href: '#features' },
+    { name: 'Pricing', href: '#pricing' },
+    { name: 'FAQ', href: '#faq' },
+  ];
   return (
-    <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          
-          {/* Logo Section */}
-          <div className="shrink-0 flex items-center">
-            <span className="text-2xl font-extrabold tracking-tight text-blue-600">
-              MANAGE
-            </span>
+    <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+      <div className="container flex h-16 items-center justify-between">
+        
+        {/* Logo Section */}
+        <div className="flex items-center gap-2">
+          <div className="bg-primary/10 p-1.5 rounded-lg">
+            <Rocket className="h-6 w-6 text-primary" />
           </div>
+          <span className="text-xl font-bold tracking-tight bg-linear-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+            MANAGE
+          </span>
+        </div>
 
-          {/* Desktop Links */}
-          <div className="hidden md:flex space-x-8 items-center">
-            {pageLinks.map((item) => (
-              <a
-                key={item}
-                href={`#${item.toLowerCase()}`}
-                className="text-gray-600 hover:text-blue-600 font-medium transition-colors duration-200"
+        {/* Desktop Links */}
+        <div className="hidden md:flex items-center gap-6">
+          <div className="flex items-center gap-6 mr-4">
+            {pageLinks.map((link) => (
+              <Link
+                to={link.href}
+                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
               >
-                {item}
-              </a>
+                {link.name}
+              </Link>
             ))}
-            <Button>
-                <Key className="mr-2 h-4 w-4" />
-                Login</Button>
           </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
-            <button 
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-600 hover:text-blue-600 focus:outline-none"
-            >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                {isOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
+          <div className="h-6 w-px bg-border mx-2" />
+          <div className="flex items-center gap-3">
+             <Link to="/login" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors px-3">
+               Log in
+             </Link>
+             <Button className="rounded-full px-5 bg-linear-to-r from-primary to-blue-600 hover:opacity-90 transition-opacity">
+               Get Started
+             </Button>
           </div>
         </div>
+
+        {/* Mobile Menu Button */}
+        <button 
+          onClick={() => setIsOpen(!isOpen)}
+          className="md:hidden p-2 text-muted-foreground hover:text-primary transition-colors"
+        >
+          {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
       </div>
 
       {/* Mobile Menu Overlay */}
       {isOpen && (
-        <div className="md:hidden bg-white border-t border-gray-100 px-4 pt-2 pb-6 space-y-1">
-          {['Product', 'Features', 'Marketplace', 'Company'].map((item) => (
-            <a
-              key={item}
-              href={`#${item.toLowerCase()}`}
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
-            >
-              {item}
-            </a>
-          ))}
-          <div className="pt-4">
-            <button className="w-full bg-blue-600 text-white px-5 py-3 rounded-xl font-medium">
-              Get Started
-            </button>
+        <div className="md:hidden absolute top-16 left-0 w-full bg-background/95 backdrop-blur-xl border-b border-border/40 p-4 animate-in slide-in-from-top-4 duration-300">
+          <div className="flex flex-col space-y-4">
+            {pageLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                className="text-lg font-medium text-muted-foreground hover:text-primary"
+                onClick={() => setIsOpen(false)}
+              >
+                {link.name}
+              </a>
+            ))}
+            <div className="pt-4 border-t border-border/40 flex flex-col gap-3">
+               <a href="/login" className="text-center py-2 font-medium text-muted-foreground">
+                 Log in
+               </a>
+               <Button className="w-full rounded-xl bg-linear-to-r from-primary to-blue-600">
+                 Get Started Free
+               </Button>
+            </div>
           </div>
         </div>
       )}
