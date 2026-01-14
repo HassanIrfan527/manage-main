@@ -1,30 +1,25 @@
-from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from app import schemas, database
+from app.services.user_service import UserService
+from app.repositories.user_repository import UserRepository
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-class UserRegister(BaseModel):
-    username: str
-    email: str
-    password: str
 
-class UserLogin(BaseModel):
-    email: str
-    password: str
+# Dependency to get UserService with database session
+async def get_user_service(db: AsyncSession = Depends(database.get_db)):
+    repo = UserRepository(db)
+    return UserService(repo)
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
-async def register(user: UserRegister):
-    # TODO: Implement user registration logic
-    # Hash password, validate input, save to database
-    return {"message": "User registered successfully", "username": user.username}
 
-@router.post("/login")
-async def login(user: UserLogin):
-    # TODO: Implement login logic
-    # Verify credentials, generate JWT token
-    return {"message": "Login successful", "access_token": "token_here"}
-
-@router.get("/me")
-async def get_current_user():
-    # TODO: Implement logic to get current authenticated user
-    return {"user": "user_data_here"}
+@router.post("/register", response_model=schemas.UserOut, status_code=201)
+async def register(
+    user: schemas.UserCreate,
+    user_service: UserService = Depends(get_user_service)
+):
+    """Register a new user account."""
+    new_user = await user_service.register_user(user)
+    if not new_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    return new_user

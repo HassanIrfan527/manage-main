@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.routers import auth
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import create_db_tables, get_db
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,3 +29,6 @@ app.add_middleware(
 @app.get("/")
 def root():
     return {"message": "Inventory API is running"}
+
+
+app.include_router(auth.router)

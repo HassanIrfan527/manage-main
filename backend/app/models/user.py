@@ -1,6 +1,8 @@
 from uuid import uuid4
-from sqlalchemy import Column, String, Boolean, DateTime, UUID
-from app.database import Base # Base is where SQLAlchemy tracks models
+from datetime import datetime, timezone
+from sqlalchemy import Column, String, DateTime, UUID
+from app.database import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -9,5 +11,5 @@ class User(Base):
     name = Column(String, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=False)
-    created_at = Column(DateTime, nullable=False)
-    updated_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))

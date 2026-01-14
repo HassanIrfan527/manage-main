@@ -9,9 +9,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    name: str
-    email: EmailStr
-    password: str
+    password: str  # Only add password - name and email come from UserBase
 
 
 class UserUpdate(BaseModel):
@@ -27,3 +25,7 @@ class User(UserBase):
 
     class Config:
         from_attributes = True
+
+
+# Alias for API responses - excludes password
+UserOut = User
