@@ -11,51 +11,38 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Github, Mail } from "lucide-react";
-import { ERROR_MESSAGES } from "@/constants/errors";
-import { useState } from "react";
 import { apiUrl } from "@/constants/config";
 import { Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
 
 const RegisterForm = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  // TODO: Add form validation logic
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm();
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-  // TODO: Handle form submission for login/register
-  const handleSumbission = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrors({}); // Clear old errors
+  const password = watch("password");
 
-    // Submission logic
+  const handleSumbission = async (data) => {
+    console.log("Form Data:", data);
+
     try {
       const response = await fetch(`${apiUrl}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(data),
       });
       const data = await response.json();
 
       if (response.ok) {
         alert("Registration Successful! Redirecting...");
       } else {
-        const errorCode = data.detail.code;
-        const friendlyMessage =
-          ERROR_MESSAGES[errorCode] || ERROR_MESSAGES.DEFAULT;
-        setErrors({ server: friendlyMessage });
+        console.log(data.detail || "Registration failed. Please try again.");
       }
     } catch (error) {
-      setErrors({ server: error.message });
-    } finally {
-      setLoading(false);
+      console.log({ errors: error.message });
     }
   };
 
@@ -99,64 +86,86 @@ const RegisterForm = () => {
         </div>
 
         <div className="space-y-4">
-          <form onSubmit={handleSumbission}>
+          <form onSubmit={handleSubmit(handleSumbission)}>
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="fullName">Full Name</Label>
               <Input
+                {...register("fullName", {
+                  required: "Full name is required",
+                })}
                 id="fullName"
                 name="fullName"
-                onChange={handleChange}
-                value={formData.fullName}
                 required
                 placeholder="John Doe"
                 className="bg-muted/30 border-border/50 focus-visible:ring-primary/30"
               />
+              {errors.fullName && (
+                <p className="text-red-500 text-xs mt-1">{errors.fullName.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                    message: "Invalid email address",
+                  },
+                })}
                 id="email"
                 type="email"
                 name="email"
                 required
-                onChange={handleChange}
-                value={formData.email}
                 placeholder="john@example.com"
                 className="bg-muted/30 border-border/50 focus-visible:ring-primary/30"
               />
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
               </div>
               <Input
+                {...register("password", {
+                  required: "Password is required",
+                  minLength: { value: 8, message: "Min 8 characters" },
+                  watch,
+                })}
                 id="password"
                 type="password"
-                onChange={handleChange}
-                value={formData.password}
                 name="password"
                 className="bg-muted/30 border-border/50 focus-visible:ring-primary/30"
               />
+              {errors.password && (
+                <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="confirm-password">Confirm Password</Label>
               <Input
+                {...register("confirmPassword", {
+                  required: "Please confirm your password",
+                  // 3. Custom validation logic
+                  validate: (value) =>
+                    value === password || "The passwords do not match",
+                })}
                 id="confirm-password"
                 type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
                 className="bg-muted/30 border-border/50 focus-visible:ring-primary/30"
               />
             </div>
             <div className="space-y-2">
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={isSubmitting}
                 className="w-full h-11 text-base font-semibold bg-linear-to-r from-primary to-blue-600 hover:opacity-90 transition-opacity"
               >
-                {loading ? "Registering..." : "Create Account"}
+                {isSubmitting ? "Registering..." : "Register"}
               </Button>
             </div>
           </form>

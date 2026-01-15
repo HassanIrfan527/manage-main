@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import auth
+from app.routers import auth, dashboard
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import create_db_tables, get_db
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -32,3 +32,4 @@ def root():
 
 
 app.include_router(auth.router)
+app.include_router(dashboard.router)
