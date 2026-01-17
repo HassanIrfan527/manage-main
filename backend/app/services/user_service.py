@@ -5,6 +5,11 @@ from app.repositories.user_repository import UserRepository
 from app.models.user import User
 from app.schemas.users import UserCreate
 from app.enums.errors import ErrorCode
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from app.utils.auth import verify_token
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 def hash_password(password: str) -> str:
@@ -14,10 +19,13 @@ def hash_password(password: str) -> str:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against a hash."""
-    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+    return bcrypt.checkpw(
+        plain_password.encode("utf-8"), hashed_password.encode("utf-8")
+    )
 
 
 class UserService:
+
     def __init__(self, repo: UserRepository):
         self.repo = repo
 
@@ -27,12 +35,12 @@ class UserService:
         existing = await self.repo.get_by_email(user_data.email)
         if existing:
             raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={
-                "code": ErrorCode.EMAIL_ALREADY_EXISTS,
-                "message": "This email is already in use."
-            }
-        )
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "code": ErrorCode.EMAIL_ALREADY_EXISTS,
+                    "message": "This email is already in use.",
+                },
+            )
 
         # 2. Hash the password
         hashed_password = hash_password(user_data.password)
@@ -49,3 +57,33 @@ class UserService:
 
         # 4. Save and return
         return await self.repo.create(new_user)
+
+    async def verify_user(self, token: str) -> User:
+        """Verify token and return the user."""
+        payload = verify_token(token)
+
+        if not payload:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token payload",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        user = await self.repo.get_by_id(user_id)
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        return user

@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import create_db_tables, get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from contextlib import asynccontextmanager
-
+from fastapi.security import OAuth2PasswordBearer
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Ensure models are imported so SQLAlchemy knows about them
@@ -15,6 +15,7 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown: any cleanup can be done here
 app = FastAPI(lifespan=lifespan)
+
 
 # Allow React to talk to FastAPI
 app.add_middleware(

@@ -11,7 +11,6 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str  # Only add password - name and email come from UserBase
 
-
 class UserUpdate(BaseModel):
     name: str | None = None
     email: EmailStr | None = None
@@ -22,10 +21,15 @@ class User(UserBase):
     id: UUID
     created_at: datetime
     updated_at: datetime
-
+    access_token: str | None = None
+    token_type: str | None = None
+    
     class Config:
         from_attributes = True
 
 
-# Alias for API responses - excludes password
-UserOut = User
+# Alias for API responses - excludes password, used for login and register
+class AuthResponse(BaseModel):
+    user: User
+    access_token: str
+    token_type: str = "bearer"
