@@ -1,4 +1,4 @@
-import React from "react";
+import { useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -11,24 +11,44 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Github, Mail } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import api from "@/services/api";
 
-const LoginForm = ({ isRegister = false }) => {
-  // TODO: Implement form state management (useState)
-  // TODO: Add form validation logic
+const LoginForm = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm();
 
+  const navigate = useNavigate();
+  const [serverError, setServerError] = useState(null);
 
-  // TODO: Handle form submission for login/register
+  const handleLogin = async (data) => {
+    setServerError(null); // Clear previous errors
+
+    const { data: responseData, error } = await api.post("/auth/login", data);
+
+    if (error) {
+      // Show error to user
+      setServerError(typeof error === "string" ? error : error.message || "Login failed");
+      return;
+    }
+
+    // Store token and redirect to dashboard
+    localStorage.setItem("token", responseData.access_token);
+    navigate("/dashboard");
+  };
 
   return (
     <Card className="w-full max-w-md border-border/50 bg-background/80 backdrop-blur-xl shadow-2xl">
       <CardHeader className="space-y-1 text-center">
         <CardTitle className="text-3xl font-bold tracking-tight">
-          {isRegister ? "Create an account" : "Welcome back"}
+          Welcome back
         </CardTitle>
         <CardDescription className="text-muted-foreground pt-2">
-          {isRegister
-            ? "Enter your details below to create your account"
-            : "Enter your credentials to access your account"}
+          Enter your credentials to access your account
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -60,84 +80,71 @@ const LoginForm = ({ isRegister = false }) => {
           </div>
         </div>
 
-        <div className="space-y-4">
-          <form action="">
-            {isRegister && (
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  placeholder="John Doe"
-                  className="bg-muted/30 border-border/50 focus-visible:ring-primary/30"
-                />
-              </div>
+        <form onSubmit={handleSubmit(handleLogin)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                  message: "Invalid email address",
+                },
+              })}
+              id="email"
+              type="email"
+              placeholder="john@example.com"
+              className="bg-muted/30 border-border/50 focus-visible:ring-primary/30"
+            />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="john@example.com"
-                className="bg-muted/30 border-border/50 focus-visible:ring-primary/30"
-              />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <Link
+                to="/forgot-password"
+                className="text-xs text-primary hover:underline transition-all"
+              >
+                Forgot password?
+              </Link>
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                {!isRegister && (
-                  <a
-                    href="#"
-                    className="text-xs text-primary hover:underline transition-all"
-                  >
-                    Forgot password?
-                  </a>
-                )}
-              </div>
-              <Input
-                id="password"
-                type="password"
-                className="bg-muted/30 border-border/50 focus-visible:ring-primary/30"
-              />
-            </div>
-            {isRegister && (
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input
-                  id="confirm-password"
-                  type="password"
-                  className="bg-muted/30 border-border/50 focus-visible:ring-primary/30"
-                />
-              </div>
+            <Input
+              {...register("password", {
+                required: "Password is required",
+              })}
+              id="password"
+              type="password"
+              className="bg-muted/30 border-border/50 focus-visible:ring-primary/30"
+            />
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
             )}
-          </form>
-        </div>
+          </div>
+
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full h-11 text-base font-semibold bg-linear-to-r from-primary to-blue-600 hover:opacity-90 transition-opacity"
+          >
+            {isSubmitting ? "Logging in..." : "Log In"}
+          </Button>
+        </form>
       </CardContent>
       <CardFooter className="flex flex-col space-y-4">
-        <Button className="w-full h-11 text-base font-semibold bg-linear-to-r from-primary to-blue-600 hover:opacity-90 transition-opacity">
-          {isRegister ? "Sign Up" : "Log In"}
-        </Button>
+        {serverError && (
+          <p className="text-red-500 text-sm font-medium">{serverError}</p>
+        )}
         <div className="text-sm text-center text-muted-foreground">
-          {isRegister ? (
-            <>
-              Already have an account?{" "}
-              <a
-                href="/login"
-                className="text-primary hover:underline font-medium"
-              >
-                Log in
-              </a>
-            </>
-          ) : (
-            <>
-              Don&apos;t have an account?{" "}
-              <a
-                href="/register"
-                className="text-primary hover:underline font-medium"
-              >
-                Sign up
-              </a>
-            </>
-          )}
+          Don&apos;t have an account?{" "}
+          <Link
+            to="/register"
+            className="text-primary hover:underline font-medium"
+          >
+            Sign up
+          </Link>
         </div>
       </CardFooter>
     </Card>

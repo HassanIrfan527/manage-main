@@ -3,7 +3,7 @@ import bcrypt
 from fastapi import HTTPException, status
 from app.repositories.user_repository import UserRepository
 from app.models.user import User
-from app.schemas.users import UserCreate
+from app.schemas.users import UserCreate, UserBase
 from app.enums.errors import ErrorCode
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -57,6 +57,31 @@ class UserService:
 
         # 4. Save and return
         return await self.repo.create(new_user)
+
+    async def login_user(self, user_data: UserBase) -> User:
+        existing = await self.repo.get_by_email(user_data.email)
+
+        if existing:
+            is_valid = verify_password(user_data.password, existing.password)
+            if is_valid:
+                return existing
+            else:
+                raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={
+                    "code": ErrorCode.INVALID_CREDENTIALS,
+                    "message": "Incorrect Password",
+                },
+            )
+        
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "code": ErrorCode.USER_NOT_FOUND,
+                    "message": "No account with this email is created",
+                },
+            )
 
     async def verify_user(self, token: str) -> User:
         """Verify token and return the user."""

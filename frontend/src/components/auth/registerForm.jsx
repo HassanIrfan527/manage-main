@@ -11,8 +11,8 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Github, Mail } from "lucide-react";
-import { apiUrl } from "@/constants/config";
-import { Link } from "react-router-dom";
+import api from "@/services/api";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 
 const RegisterForm = () => {
@@ -23,27 +23,24 @@ const RegisterForm = () => {
     formState: { errors, isSubmitting },
   } = useForm();
 
+  const navigate = useNavigate();
   const password = watch("password");
 
   const handleSumbission = async (data) => {
     console.log("Form Data:", data);
 
-    try {
-      const response = await fetch(`${apiUrl}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const data = await response.json();
+    // Using the api utility - it handles headers and JSON parsing for us
+    const { data: responseData, error } = await api.post("/auth/register", data);
 
-      if (response.ok) {
-        alert("Registration Successful! Redirecting...");
-      } else {
-        console.log(data.detail || "Registration failed. Please try again.");
-      }
-    } catch (error) {
-      console.log({ errors: error.message });
+    if (error) {
+      // TODO: Display this error to the user (we can add state for this later)
+      console.log("Registration failed:", error);
+      return;
     }
+
+    // Store token and redirect
+    localStorage.setItem("token", responseData.access_token);
+    navigate("/dashboard");
   };
 
   return (
@@ -88,19 +85,21 @@ const RegisterForm = () => {
         <div className="space-y-4">
           <form onSubmit={handleSubmit(handleSumbission)}>
             <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
+              <Label htmlFor="name">Full Name</Label>
               <Input
-                {...register("fullName", {
+                {...register("name", {
                   required: "Full name is required",
                 })}
-                id="fullName"
-                name="fullName"
+                id="name"
+                name="name"
                 required
                 placeholder="John Doe"
                 className="bg-muted/30 border-border/50 focus-visible:ring-primary/30"
               />
-              {errors.fullName && (
-                <p className="text-red-500 text-xs mt-1">{errors.fullName.message}</p>
+              {errors.name && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.name.message}
+                </p>
               )}
             </div>
 
@@ -122,7 +121,9 @@ const RegisterForm = () => {
                 className="bg-muted/30 border-border/50 focus-visible:ring-primary/30"
               />
               {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.email.message}
+                </p>
               )}
             </div>
             <div className="space-y-2">
@@ -141,7 +142,9 @@ const RegisterForm = () => {
                 className="bg-muted/30 border-border/50 focus-visible:ring-primary/30"
               />
               {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.password.message}
+                </p>
               )}
             </div>
 
