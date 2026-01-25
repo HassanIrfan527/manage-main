@@ -29,7 +29,7 @@ const LoginForm = () => {
     setServerError(null); // Clear previous errors
 
     const { data: responseData, error } = await api.post("/auth/login", data);
-
+    console.log(data)
     if (error) {
       // Show error to user
       setServerError(typeof error === "string" ? error : error.message || "Login failed");

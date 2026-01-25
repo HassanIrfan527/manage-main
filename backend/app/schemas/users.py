@@ -8,6 +8,10 @@ class UserBase(BaseModel):
     email: EmailStr
 
 
+# For Login endpoint
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
 class UserCreate(UserBase):
     password: str  # Only add password - name and email come from UserBase
 
