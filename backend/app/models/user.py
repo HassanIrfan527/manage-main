@@ -1,6 +1,7 @@
 from uuid import uuid4
 from datetime import datetime, timezone
 from sqlalchemy import Column, String, DateTime, UUID
+from sqlalchemy.orm import relationship
 from app.database import Base
 
 
@@ -13,3 +14,6 @@ class User(Base):
     password = Column(String, nullable=False)
     created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    products = relationship("Product", back_populates="owner")
