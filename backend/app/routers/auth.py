@@ -4,19 +4,15 @@ from app import schemas, database
 from app.services.user_service import UserService
 from app.repositories.user_repository import UserRepository
 from app.utils import create_access_token
+from app.dependency import get_user_service
 import logging
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 logger = logging.getLogger(__name__)
-# Dependency to get UserService with database session
-async def get_user_service(db: AsyncSession = Depends(database.get_db)):
-    repo = UserRepository(db)
-    return UserService(repo)
-
 
 @router.post("/register", response_model=schemas.AuthResponse, status_code=201)
-async def register(
+async def register_user(
     user: schemas.UserCreate,
     user_service: UserService = Depends(get_user_service)
 ):
@@ -35,7 +31,7 @@ async def register(
     }
     
 @router.post("/login", response_model=schemas.AuthResponse)
-async def login(
+async def login_user(
     user: schemas.UserLogin,
     user_service: UserService = Depends(get_user_service)
 ):
